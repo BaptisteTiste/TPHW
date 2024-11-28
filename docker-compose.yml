@@ -1,0 +1,33 @@
+ version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-container
+    ports:
+      - "3000:3000" # Expose le backend sur le port 3000
+    environment:
+      - DB_HOST=mariadb
+      - DB_USER=root
+      - DB_PASSWORD=monmotdepasse
+      - DB_NAME=monitoring
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: monmotdepasse
+      MYSQL_DATABASE: monitoring
+    ports:
+      - "3306:3306" # Expose la base de données sur le port 3306
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+
