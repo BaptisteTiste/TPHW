@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variables Automate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+        table {
+            width: 90%;
+            margin: 2rem auto;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #333;
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .loader {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .back-btn {
+            display: inline-block;
+            margin: 2rem auto;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            color: white;
+            background-color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .back-btn:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Tableau des Variables de l'Automate</h1>
+    </header>
+    <div class="loader" id="loader">Chargement des données...</div>
+    <table id="variables-table" style="display: none;">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Adresse</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <div style="text-align: center;">
+        <a href="index.html" class="back-btn">Retour à l'accueil</a>
+    </div>
+
+    <script>
+        // Fonction pour récupérer les données des variables
+        async function fetchVariables() {
+            try {
+                const response = await fetch('http://localhost:3001/variables'); // Adapter l'URL si nécessaire
+                const data = await response.json();
+
+                // Cacher le loader et afficher le tableau
+                document.getElementById('loader').style.display = 'none';
+                const table = document.getElementById('variables-table');
+                table.style.display = 'table';
+
+                // Remplir le tableau avec les données
+                const tbody = table.querySelector('tbody');
+                tbody.innerHTML = '';
+                data.forEach(variable => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${variable.nom}</td>
+                        <td>${variable.adresse || 'Non spécifiée'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données:', error);
+                document.getElementById('loader').textContent = 'Erreur lors du chargement des données.';
+            }
+        }
+
+        // Appeler la fonction au chargement de la page
+        fetchVariables();
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page d'accueil - Gestion des Variables</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+        }
+        main {
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        form div {
+            margin-bottom: 1rem;
+        }
+        form label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        form input, form select {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        form button {
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #444;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+        th, td {
+            text-align: center;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #333;
+            color: #fff;
+        }
+        .actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            margin: 0 0.2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .actions .edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .actions .delete {
+            background-color: #f44336;
+            color: white;
+        }
+        .actions button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestion des Variables à Surveiller</h1>
+    </header>
+    <main>
+        <h2>Ajouter ou Modifier une Variable</h2>
+        <form id="variable-form">
+            <input type="hidden" id="variable-id" value="">
+            <div>
+                <label for="nom">Nom de la variable</label>
+                <input type="text" id="nom" placeholder="Exemple : Voyant Rouge" required>
+            </div>
+            <div>
+                <label for="ip">Adresse IP de l'automate</label>
+                <input type="text" id="ip" placeholder="Exemple : 192.168.1.10" required>
+            </div>
+            <div>
+                <label for="adresse">Variable à lire (Adresse Modbus)</label>
+                <input type="number" id="adresse" placeholder="Exemple : 602" required>
+            </div>
+            <div>
+                <label for="frequence">Fréquence d'enregistrement (ms)</label>
+                <input type="number" id="frequence" placeholder="Exemple : 2000" required>
+            </div>
+            <button type="submit">Enregistrer</button>
+        </form>
+
+        <h2>Liste des Variables</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>IP Automate</th>
+                    <th>Adresse</th>
+                    <th>Fréquence</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="variables-table">
+                <!-- Les données seront insérées ici -->
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        const form = document.getElementById('variable-form');
+        const tableBody = document.getElementById('variables-table');
+
+        // Charger les variables existantes
+        async function loadVariables() {
+            const response = await fetch('http://localhost:3001/variables');
+            const variables = await response.json();
+            tableBody.innerHTML = '';
+            variables.forEach(variable => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${variable.nom}</td>
+                    <td>${variable.ip}</td>
+                    <td>${variable.adresse}</td>
+                    <td>${variable.frequence}</td>
+                    <td class="actions">
+                        <button class="edit" onclick="editVariable(${variable.id})">Modifier</button>
+                        <button class="delete" onclick="deleteVariable(${variable.id})">Supprimer</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Ajouter ou modifier une variable
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const id = document.getElementById('variable-id').value;
+            const nom = document.getElementById('nom').value;
+            const ip = document.getElementById('ip').value;
+            const adresse = document.getElementById('adresse').value;
+            const frequence = document.getElementById('frequence').value;
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `http://localhost:3001/variables/${id}` : 'http://localhost:3001/variables';
+
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom, ip, adresse, frequence })
+            });
+
+            form.reset();
+            loadVariables();
+        });
+
+        // Remplir le formulaire pour modifier une variable
+        async function editVariable(id) {
+            const response = await fetch(`http://localhost:3001/variables/${id}`);
+            const variable = await response.json();
+            document.getElementById('variable-id').value = variable.id;
+            document.getElementById('nom').value = variable.nom;
+            document.getElementById('ip').value = variable.ip;
+            document.getElementById('adresse').value = variable.adresse;
+            document.getElementById('frequence').value = variable.frequence;
+        }
+
+        // Supprimer une variable
+        async function deleteVariable(id) {
+            await fetch(`http://localhost:3001/variables/${id}`, { method: 'DELETE' });
+            loadVariables();
+        }
+
+        // Charger les données au chargement de la page
+        loadVariables();
+    </script>
+</body>
+</html>
