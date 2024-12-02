@@ -1,97 +1,44 @@
 const ModbusRTU = require("modbus-serial");
-const mysql = require("mysql2/promise"); // Utiliser la version "promise" de mysql2 pour simplifier les requêtes
 
-// Configuration de l'automate
+// Configuration du client
 const client = new ModbusRTU();
 const AUTOMATE_IP = "172.16.1.24"; // Adresse IP de l'automate
 const AUTOMATE_PORT = 502;         // Port Modbus (par défaut : 502)
-const MODBUS_ADDRESS = 602;        // Adresse de la variable à interroger (%M602)
+const MODBUS_ADDRESS = 601;        // Adresse de la variable à interroger (%M602)
 const INTERVAL = 500;              // Intervalle en ms pour la mise à jour (0.5 seconde)
 
-// Configuration de la base de données
-const dbConfig = {
-    host: "mariadb-container", // Nom du conteneur MariaDB
-    user: "root",
-    password: "1234",
-    database: "TP",
-};
-
-// Connexion à la base de données
-let connection;
-async function connectToDatabase() {
+// Fonction pour lire la variable et l'afficher
+async function readVariable() {
     try {
-        connection = await mysql.createConnection(dbConfig);
-        console.log("Connecté à la base de données");
-
-        // Création de la table "variables" si elle n'existe pas
-        const createTableQuery = `
-            CREATE TABLE IF NOT EXISTS variables (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nom VARCHAR(255) NOT NULL,
-                etat TINYINT NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
-        `;
-        await connection.execute(createTableQuery);
-        console.log("Table 'variables' vérifiée/créée");
-    } catch (err) {
-        console.error("Erreur de connexion à la base de données:", err.message);
-        process.exit(1);
-    }
-}
-
-// Fonction pour lire la variable de l'automate et l'enregistrer dans la base
-async function readAndSaveVariable() {
-    try {
-        // Lire la valeur de l'automate
         const data = await client.readCoils(MODBUS_ADDRESS, 1);
-        const value = data.data[0] ? 1 : 0;
-
+        const value = data.data[0] ? 1 : 0; // Convertir la valeur en 0 ou 1
         console.log(`Valeur actuelle de la variable %M${MODBUS_ADDRESS}: ${value}`);
-
-        // Insérer ou mettre à jour la valeur dans la base de données
-        const upsertQuery = `
-            INSERT INTO variables (nom, etat)
-            VALUES ('%M${MODBUS_ADDRESS}', ?)
-            ON DUPLICATE KEY UPDATE etat = ?, updated_at = CURRENT_TIMESTAMP;
-        `;
-        await connection.execute(upsertQuery, [value, value]);
-
-        console.log("Valeur mise à jour dans la base de données");
     } catch (err) {
-        console.error("Erreur lors de la lecture ou de la mise à jour:", err.message);
+        console.error("Erreur lors de la lecture de l'automate:", err.message);
     }
 }
 
-// Connexion à l'automate et démarrage de la boucle
+// Connexion au serveur Modbus et démarrage de la boucle
 async function start() {
     try {
         await client.connectTCP(AUTOMATE_IP, { port: AUTOMATE_PORT });
         console.log("Connecté à l'automate");
 
         // Lire la variable toutes les 500 ms
-        setInterval(readAndSaveVariable, INTERVAL);
+        setInterval(readVariable, INTERVAL);
     } catch (err) {
         console.error("Erreur de connexion à l'automate:", err.message);
-        process.exit(1);
     }
 }
 
-// Fermer les connexions proprement lorsque le programme s'arrête
-process.on("SIGINT", async () => {
+// Fermer la connexion proprement lorsqu'on arrête le programme
+process.on("SIGINT", () => {
     console.log("Fermeture du programme...");
-    if (connection) {
-        await connection.end();
-        console.log("Connexion à la base de données fermée");
-    }
     client.close(() => {
         console.log("Connexion au Modbus fermée");
         process.exit();
     });
 });
 
-// Lancer les connexions
-(async () => {
-    await connectToDatabase();
-    await start();
-})();
+// Démarrer le programme
+start();
