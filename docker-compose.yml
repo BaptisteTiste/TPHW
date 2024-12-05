@@ -22,5 +22,15 @@ services:
     depends_on:
       - mariadb
 
+#Service frontend non fini par manque de temps
+  # frontend:
+  #   image: nginx:latest
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./frontend:/usr/share/nginx/html
+  #   networks:
+  #     - hackathon_network
+
 volumes:
   db_data:  # Déclaration globale du volume

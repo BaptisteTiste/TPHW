@@ -4,6 +4,12 @@ const ModbusRTU = require('modbus-serial');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const cors = require('cors');
+app.use(cors());
+
+// Middleware pour parser le JSON des requêtes
+app.use(express.json());
+
 // Initialisation du pool de connexions MySQL
 const pool = mysql.createPool({
     host: 'mariadb-container',
@@ -49,28 +55,28 @@ async function updateDatabase() {
     }
 }
 
-// Route pour ajouter ou mettre à jour une variable
-app.post('/variables', (req, res) => {
-    const { nom, etat } = req.body;
+// // Route pour ajouter ou mettre à jour une variable
+// app.post('/variables', (req, res) => {
+//     const { nom, etat } = req.body;
 
-    if (!nom || typeof etat === 'undefined') {
-        return res.status(400).send('Nom et état sont requis');
-    }
+//     if (!nom || typeof etat === 'undefined') {
+//         return res.status(400).send('Nom et état sont requis');
+//     }
 
-    const sql = `
-        INSERT INTO variables (nom, etat) 
-        VALUES (?, ?) 
-        ON DUPLICATE KEY UPDATE etat = VALUES(etat);
-    `;
-    pool.query(sql, [nom, etat], (err) => {
-        if (err) {
-            console.error('Erreur lors de l insertion ou mise à jour de la variable:', err);
-            res.status(500).send('Erreur serveur');
-        } else {
-            res.send('Variable ajoutée ou mise à jour avec succès');
-        }
-    });
-});
+//     const sql = `
+//         INSERT INTO variables (nom, etat) 
+//         VALUES (?, ?) 
+//         ON DUPLICATE KEY UPDATE etat = VALUES(etat);
+//     `;
+//     pool.query(sql, [nom, etat], (err) => {
+//         if (err) {
+//             console.error('Erreur lors de l insertion ou mise à jour de la variable:', err);
+//             res.status(500).send('Erreur serveur');
+//         } else {
+//             res.send('Variable ajoutée ou mise à jour avec succès');
+//         }
+//     });
+// });
 
 // Actualiser la base de données toutes les 0.5 secondes
 setInterval(updateDatabase, 500);
@@ -82,7 +88,7 @@ app.get('/', (req, res) => {
 
 // Route pour récupérer les variables depuis la base de données
 app.get('/variables', (req, res) => {
-    const sql = 'SELECT * FROM variables;';
+    const sql = 'SELECT * FROM web;';
     pool.query(sql, (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des variables:', err);
@@ -91,6 +97,49 @@ app.get('/variables', (req, res) => {
             res.json(results);
         }
     }); 
+});
+
+// Route pour ajouter une variable dans la table 'web'
+app.post('/variables', (req, res) => {
+    const { nom, IPautomate, adresse, frequence } = req.body;
+
+    // Validation des champs
+    if (!nom || !IPautomate || !adresse || !frequence) {
+        return res.status(400).send('Tous les champs sont requis');
+    }
+
+    const sql = `
+        INSERT INTO web (nom, IPautomate, adresse, frequence) 
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+        IPautomate = VALUES(IPautomate), 
+        adresse = VALUES(adresse), 
+        frequence = VALUES(frequence);
+    `;
+    
+    pool.query(sql, [nom, IPautomate, adresse, frequence], (err) => {
+        if (err) {
+            console.error('Erreur lors de l\'insertion de la variable:', err);
+            res.status(500).send('Erreur serveur');
+        } else {
+            res.send('Variable ajoutée ou mise à jour avec succès');
+        }
+    });
+});
+
+// Route pour supprimer une variable par nom
+app.delete('/variables/:nom', (req, res) => {
+    const { nom } = req.params;
+
+    const sql = 'DELETE FROM web WHERE nom = ?;';
+    pool.query(sql, [nom], (err) => {
+        if (err) {
+            console.error('Erreur lors de la suppression de la variable:', err);
+            res.status(500).send('Erreur serveur');
+        } else {
+            res.send('Variable supprimée avec succès');
+        }
+    });
 });
 
 
