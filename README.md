@@ -17,15 +17,14 @@ Ce projet consiste en la gestion des variables d'un automate industriel, permett
 Avant de commencer, assurez-vous que vous avez les éléments suivants installés sur votre machine :
 
 - **Docker et Docker Compose** : pour déployer l'application dans des conteneurs.
-- **Node.js et npm** (si vous ne souhaitez pas utiliser Docker).
 
 ## Déploiement avec Docker
 
 ### Construire et lancer les conteneurs Docker
 
 - **Clonez le repository et placez-vous dans le répertoire du projet.**
-    git clone https://github.com/votre-utilisateur/votre-projet.git
-    cd votre-projet
+-git clone https://github.com/votre-utilisateur/votre-projet.git
+-cd votre-projet
   
 Ce projet utilise Docker Compose pour gérer le backend, la base de données MariaDB et les autres services.
 
@@ -47,7 +46,9 @@ Ce projet utilise Docker Compose pour gérer le backend, la base de données Mar
 ## Utilisation
 
 - **Frontend : L'interface web permet d'ajouter ou de modifier les variables à surveiller (nom, adresse IP de l'automate, adresse Modbus et fréquence d'enregistrement).**
-
+  - index est la page d'acceuil
+  - Historique est la page (en cour de dévellopement) qui permet de lire les variables de l'usine
+  - 
 - **Backend : Le backend récupère les valeurs des variables depuis l'automate via Modbus, puis les enregistre dans la base de données MariaDB.**
 
 - **Base de données : Les variables sont stockées dans une table appelée variables, avec leur nom et état (0 ou 1).**
@@ -58,7 +59,7 @@ Ce projet utilise Docker Compose pour gérer le backend, la base de données Mar
 
    -Remplissez le formulaire avec les informations de la variable à ajouter.
 
-  -Cliquez sur "Enregistrer". La variable sera automatiquement ajoutée à la base de données.
+  -Cliquez sur "Enregistrer". La variable sera automatiquement ajoutée à la base de données TP.
 
 ### Routes disponibles
 
