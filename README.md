@@ -23,9 +23,11 @@ Avant de commencer, assurez-vous que vous avez les éléments suivants installé
 ### Construire et lancer les conteneurs Docker
 
 - **Clonez le repository et placez-vous dans le répertoire du projet.**
--git clone https://github.com/votre-utilisateur/votre-projet.git
+
+-git clone https://github.com/BaptisteTiste/TPHW.git
+
 -cd votre-projet
-  
+
 Ce projet utilise Docker Compose pour gérer le backend, la base de données MariaDB et les autres services.
 
 - **Copier le code.**
@@ -48,7 +50,7 @@ Ce projet utilise Docker Compose pour gérer le backend, la base de données Mar
 - **Frontend : L'interface web permet d'ajouter ou de modifier les variables à surveiller (nom, adresse IP de l'automate, adresse Modbus et fréquence d'enregistrement).**
   - index est la page d'acceuil
   - Historique est la page (en cour de dévellopement) qui permet de lire les variables de l'usine
-  - 
+    
 - **Backend : Le backend récupère les valeurs des variables depuis l'automate via Modbus, puis les enregistre dans la base de données MariaDB.**
 
 - **Base de données : Les variables sont stockées dans une table appelée variables, avec leur nom et état (0 ou 1).**
